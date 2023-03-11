@@ -2,7 +2,7 @@
 
 void Server::init()
 {
-    threadPool.start(Server::redirectToCallback);
+    //threadPool.start(Server::redirectToCallback);
 
     if(ListenerArray.empty())
     {
@@ -237,7 +237,7 @@ void Server::Receive(Player* player,int *fd, ushort type)
         std::string eventName = (std::string) cache->packet.event.content;
 
         
-        threadPool.
+        
     }
 }
 
