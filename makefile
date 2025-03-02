@@ -1,5 +1,5 @@
 SRCS = main.cpp MyServer.cpp $(SRCS_LIB)
-SRCS_LIB = App.cpp ThreadPool.cpp Server.cpp Supervisor.cpp Client.cpp Logger.cpp ProcessMonitor.cpp
+SRCS_LIB = Globals.cpp App.cpp ThreadPool.cpp Server.cpp Supervisor.cpp Client.cpp Logger.cpp ProcessMonitor.cpp
 OBJ_DIR = ./x64/objects
 LIB_DIR = ./x64/lib
 

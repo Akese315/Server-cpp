@@ -31,7 +31,7 @@ struct Listener
     unsigned short port;
 };
 
-template <typename T = Client>
+template <typename T = Client<Datacache>>
 class Server : public Supervisor
 {
 
@@ -62,7 +62,7 @@ public:
 
     void disconnect_client(T &client)
     {
-        interrupt_epoll_wait(Server::DISCONNECTED, client.get_socket());
+        interrupt_epoll_wait(Server::HOST_DISCONNECTION, client.get_socket());
     };
 
     void restart()
@@ -114,12 +114,12 @@ public:
     {
         is_running = false;
         interrupt_epoll_wait(Server::STOP, 0);
-        Logger::add_logs("Server is stopping...", LogLevel::WARNING);
+        Logger::add_logs("Server is stopping...", LogLevel::WARNING, false);
         if (my_thread.joinable())
         {
             my_thread.join();
         }
-        Logger::add_logs("Server is stopped", LogLevel::WARNING);
+        Logger::add_logs("Server is stopped", LogLevel::WARNING, false);
     };
 
     virtual void receive_task(std::shared_ptr<T> client, uint32_t task_flag) {};
@@ -128,7 +128,7 @@ public:
 
     void start()
     {
-        Logger::add_logs("Server is starting...", LogLevel::PASS);
+        Logger::add_logs("Server is starting...", LogLevel::PASS, false);
         bool can_start = init();
         if (!can_start)
         {
@@ -199,7 +199,7 @@ public:
     const static uint16_t HOST_DISCONNECTION = 5;
     const static uint16_t TIMEOUT = 6;
     const static uint16_t UNEXPECTED_DISCONNECTION = 7;
-    const static uint16_t MESSAGE = 8;
+    const static uint16_t DATA = 8;
     const static uint16_t BAN = 9;
     const static uint16_t STOP = 10;
 
@@ -336,7 +336,7 @@ private:
             }
             else
             {
-                send_task(std::string("server"), std::string("server"), Server<T>::MESSAGE, fd);
+                send_task(std::string("server"), std::string("server"), Server<T>::DATA, fd);
             }
             fdr--;
         }
@@ -353,8 +353,10 @@ private:
             return false;
         }
         decode_interrupt_wait_message(message, flag, fd_check);
+        Logger::add_logs("Received a message from the pipe, flag :" + std::to_string(flag) + "fd : " + std::to_string(fd_check));
         if (flag == Server<T>::STOP)
         {
+            Logger::add_logs("Received a stop message", LogLevel::CRITICAL, true);
             return false;
         }
         if (flag == Server<T>::BAN)
@@ -447,9 +449,7 @@ private:
 
     int new_connection(int fd)
     {
-        struct sockaddr_in socket_param
-        {
-        };
+        struct sockaddr_in socket_param{};
         socklen_t socket_addr_len = sizeof(socket_param);
         int new_fd = accept(fd, (struct sockaddr *)&socket_param, (socklen_t *)&socket_addr_len);
         if (new_fd < 0)
@@ -581,12 +581,16 @@ private:
 
             if (error != 0)
             {
+                if (errno == EADDRINUSE)
+                {
+                    Logger::add_logs("Port " + std::to_string(listener_array[i].port) + " is already in use", LogLevel::ERROR, false);
+                }
                 get_socket_error("bind", listener_array[i].socket);
                 return false;
             }
 
             std::string info = "server bind on port : " + std::to_string(listener_array[i].port);
-            Logger::add_logs(info, LogLevel::INFO);
+            Logger::add_logs(info, LogLevel::INFO, false);
         }
         return true;
     };
@@ -605,7 +609,7 @@ private:
             return "TIMEOUT";
         case Server<T>::UNEXPECTED_DISCONNECTION:
             return "UNEXPECTED_DISCONNECTION";
-        case Server<T>::MESSAGE:
+        case Server<T>::DATA:
             return "MESSAGE";
         case Server<T>::BAN:
             return "BAN";
@@ -667,6 +671,7 @@ private:
             {
                 if (!check_file_descriptor(fdr))
                 {
+                    Logger::add_logs("Stop has been triggered", LogLevel::CRITICAL);
                     break;
                 }
             }

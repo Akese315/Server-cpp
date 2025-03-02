@@ -17,6 +17,20 @@ public:
 	std::string source;
 	int flag;
 	int fd;
+
+	Task(std::string destination, std::string source, int flag, int fd)
+	{
+		this->destination = destination;
+		this->source = source;
+		this->flag = flag;
+		this->fd = fd;
+	};
+
+	Task() {
+	};
+
+	~Task() {
+	};
 };
 
 template <typename T = Task>

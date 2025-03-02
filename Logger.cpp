@@ -21,11 +21,15 @@ Logger::~Logger()
     add_logs("Logger has stopped. Everything that will be on the console won't be stored on the file ", LogLevel::PASS);
 }
 
-void Logger::add_logs(std::string log_str, LogLevel level)
+void Logger::add_logs(std::string log_str, LogLevel level, bool debug)
 {
 
-    Log log(log_str, level);
+    Log log(log_str, level, debug);
     std::unique_lock<std::mutex> lock(queueMutex);
+    if (DEBUG_MODE == false && debug == true)
+    {
+        return;
+    }
     if (stopLogging)
     {
         std::string console_log = format_log(log.log_str, log.level);
@@ -51,6 +55,7 @@ void Logger::process_logs()
             std::string console_log = format_log(log.log_str, log.level);
             writeLog(log.log_str.c_str());
             loggerQueue.pop();
+
             std::cout << console_log;
         }
     }

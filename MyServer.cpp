@@ -8,9 +8,9 @@ MyServer::~MyServer()
 {
 }
 
-void MyServer::receive_task(std::shared_ptr<Client> client, uint32_t flagTask)
+void MyServer::receive_task(std::shared_ptr<Client<Datacache>> client, uint32_t flagTask)
 {
-    if (flagTask == MyServer::MESSAGE)
+    if (flagTask == MyServer::DATA)
     {
         char tempBuffer[1024];
         int byte = client->receiveData(tempBuffer, 1024);

@@ -7,6 +7,7 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include "Globals.hpp"
 
 enum class LogLevel
 {
@@ -32,7 +33,8 @@ class Log
 public:
     std::string log_str;
     LogLevel level;
-    Log(std::string log_str, LogLevel level) : log_str(log_str), level(level) {}
+    bool debug;
+    Log(std::string log_str, LogLevel level, bool debug) : log_str(log_str), level(level), debug(debug) {}
 };
 
 class Logger
@@ -41,7 +43,7 @@ public:
     Logger(const char *path = Logger::filename);
     ~Logger();
 
-    static void add_logs(std::string log_str, LogLevel level = LogLevel::INFO);
+    static void add_logs(std::string log_str, LogLevel level = LogLevel::INFO, bool debug = true);
 
 private:
     static void createFile();
